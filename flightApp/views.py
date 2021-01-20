@@ -6,6 +6,18 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 
+# imports to automate auth token creation
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+from django.conf import settings
+# this method is auto-invoked after a new user gets created/saved in the admin section
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def createAuthToken_callback(sender, instance, created, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
+
+
 # two custom API methods
 @api_view(['POST'])
 def find_flights(request):
@@ -39,7 +51,7 @@ def save_reservation(request):
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.all()
     serializer_class = FlightSerializer
-    permission_classes = (IsAuthenticated)
+    permission_classes = (IsAuthenticated,)
 
 class PassengerViewSet(viewsets.ModelViewSet):
     queryset = Passenger.objects.all()
